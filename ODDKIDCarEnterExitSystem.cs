@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+
+
 public class ODDKIDCarEnterExitSystem : MonoBehaviour
 {
 
@@ -12,25 +14,27 @@ public class ODDKIDCarEnterExitSystem : MonoBehaviour
 
 
     [Header("Car")]
-    public MonoBehaviour CarController;
+    public Ashsvp.SimcadeVehicleController CarController;
     public Transform Car;
+    [SerializeField] public Transform exitPositionTransform;
 
     [Header("Player Game Objects")]
     public Transform Player;
     public Transform PlayerInCar;
+    
 
     [Header("Cameras")]
     public GameObject PlayerCam;
     public GameObject CarCam;
 
     public GameObject DriveUi;
-
-    bool Candrive;
+    private bool Candrive;
 
     private void Awake()
     {
         playerControls = new ODDKIDEnterExit();
     }
+    
 
     private void OnEnable()
     {
@@ -52,22 +56,19 @@ public class ODDKIDCarEnterExitSystem : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        CarController.enabled = false;
+        CarController.CanDrive = false;
         CarCam.gameObject.SetActive(false);
         PlayerCam.gameObject.SetActive(true);
         DriveUi.gameObject.SetActive(false);
         PlayerInCar.gameObject.SetActive(false);
+
     }
 
 
-
-    // Update is called once per frame
-   
     private void enterCar(InputAction.CallbackContext Context)
     {
-        
-
-            CarController.enabled = true; // After Click F button Car Controller Script is enabled
+        if (Candrive)
+        {
 
             DriveUi.gameObject.SetActive(false);
 
@@ -79,36 +80,37 @@ public class ODDKIDCarEnterExitSystem : MonoBehaviour
             // Camera
             PlayerCam.gameObject.SetActive(false);
             CarCam.gameObject.SetActive(true);
+
+
+            Player.position = this.exitPositionTransform.position;
+          
+
+            CarController.CanDrive = true;
+        }
         
     }
-   private void exitCar(InputAction.CallbackContext Context)
+    private void exitCar(InputAction.CallbackContext Context)
     {
-        
-                
-        
+        if (Player.transform.parent == Car) { 
+        // Here We Unparent the Player with Car
+        Player.transform.SetParent(null);
+        Player.gameObject.SetActive(true);
+
+        PlayerInCar.gameObject.SetActive(false);
+
+        // Here If Player Is Not Driving So PlayerCamera turn On and Car Camera turn off
+
+        PlayerCam.gameObject.SetActive(true);
+        CarCam.gameObject.SetActive(false);
+
+        Player.position = this.exitPositionTransform.position;
 
 
-
-            CarController.enabled = false; // After Click G button Car Controller Script is disable
-
-
-            // Here We Unparent the Player with Car
-            Player.transform.SetParent(null);
-            Player.gameObject.SetActive(true);
-            PlayerInCar.gameObject.SetActive(false);
-
-            // Here If Player Is Not Driving So PlayerCamera turn On and Car Camera turn off
-
-            PlayerCam.gameObject.SetActive(true);
-            CarCam.gameObject.SetActive(false);
-        
+        CarController.CanDrive = false;
+    }
     }
 
-
-
-
-
-    void OnTriggerStay(Collider col)
+    private void OnTriggerStay(Collider col)
     {
         if (col.gameObject.tag == "Player")
         {
@@ -117,7 +119,7 @@ public class ODDKIDCarEnterExitSystem : MonoBehaviour
         }
     }
 
-    void OnTriggerExit(Collider col)
+    private void OnTriggerExit(Collider col)
     {
         if (col.gameObject.tag == "Player")
         {
